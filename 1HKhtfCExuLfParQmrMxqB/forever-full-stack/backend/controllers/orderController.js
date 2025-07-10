@@ -1,5 +1,6 @@
 import orderModel from "../models/orderModel.js";
 import userModel from "../models/userModel.js";
+import productModel from "../models/productModel.js";
 import razorpay from 'razorpay'
 
 // global variables
@@ -10,6 +11,100 @@ const razorpayInstance = new razorpay({
     key_id : process.env.RAZORPAY_KEY_ID,
     key_secret : process.env.RAZORPAY_KEY_SECRET,
 })
+
+// Analytics functions
+const getAnalytics = async (req, res) => {
+    try {
+        // Get total orders
+        const totalOrders = await orderModel.countDocuments({});
+        
+        // Get total revenue
+        const revenueData = await orderModel.aggregate([
+            { $group: { _id: null, totalRevenue: { $sum: "$amount" } } }
+        ]);
+        const totalRevenue = revenueData.length > 0 ? revenueData[0].totalRevenue : 0;
+        
+        // Get pending orders
+        const pendingOrders = await orderModel.countDocuments({ status: "Order Placed" });
+        
+        // Get delivered orders
+        const deliveredOrders = await orderModel.countDocuments({ status: "Delivered" });
+        
+        // Get total products
+        const totalProducts = await productModel.countDocuments({});
+        
+        // Get monthly revenue for last 6 months
+        const sixMonthsAgo = Date.now() - (6 * 30 * 24 * 60 * 60 * 1000);
+        const monthlyRevenue = await orderModel.aggregate([
+            { $match: { date: { $gte: sixMonthsAgo } } },
+            {
+                $group: {
+                    _id: {
+                        year: { $year: { $toDate: "$date" } },
+                        month: { $month: { $toDate: "$date" } }
+                    },
+                    revenue: { $sum: "$amount" },
+                    orders: { $sum: 1 }
+                }
+            },
+            { $sort: { "_id.year": 1, "_id.month": 1 } }
+        ]);
+        
+        // Get top selling products
+        const topProducts = await orderModel.aggregate([
+            { $unwind: "$items" },
+            {
+                $group: {
+                    _id: "$items.name",
+                    totalSold: { $sum: "$items.quantity" },
+                    revenue: { $sum: { $multiply: ["$items.price", "$items.quantity"] } }
+                }
+            },
+            { $sort: { totalSold: -1 } },
+            { $limit: 5 }
+        ]);
+        
+        // Get category-wise sales
+        const categorySales = await orderModel.aggregate([
+            { $unwind: "$items" },
+            {
+                $lookup: {
+                    from: "products",
+                    localField: "items.name",
+                    foreignField: "name",
+                    as: "productInfo"
+                }
+            },
+            { $unwind: "$productInfo" },
+            {
+                $group: {
+                    _id: "$productInfo.category",
+                    totalSold: { $sum: "$items.quantity" },
+                    revenue: { $sum: { $multiply: ["$items.price", "$items.quantity"] } }
+                }
+            },
+            { $sort: { revenue: -1 } }
+        ]);
+        
+        res.json({
+            success: true,
+            analytics: {
+                totalOrders,
+                totalRevenue,
+                pendingOrders,
+                deliveredOrders,
+                totalProducts,
+                monthlyRevenue,
+                topProducts,
+                categorySales
+            }
+        });
+        
+    } catch (error) {
+        console.log(error);
+        res.json({ success: false, message: error.message });
+    }
+};
 
 // Placing orders using COD Method
 const placeOrder = async (req,res) => {
@@ -148,4 +243,4 @@ const updateStatus = async (req,res) => {
     }
 }
 
-export {verifyRazorpay ,placeOrder, placeOrderRazorpay, allOrders, userOrders, updateStatus}
+export {verifyRazorpay ,placeOrder, placeOrderRazorpay, allOrders, userOrders, updateStatus, getAnalytics}
