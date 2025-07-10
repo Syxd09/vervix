@@ -36,7 +36,7 @@ const HeroCarousel = () => {
   };
 
   return (
-    <div className="relative w-full mt-[5rem] z-0 overflow-hidden">
+    <div className="relative w-full mt-[6rem] z-0 overflow-hidden">
       <div className="relative group">
         {/* Image Container */}
         <div className="w-full h-[50vh] sm:h-[65vh] md:h-[75vh] lg:h-[85vh] xl:h-[90vh] max-h-[70vh] overflow-hidden">
