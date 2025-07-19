@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import { ShopContext } from "../context/ShopContext";
 import Title from "./Title";
 import { Link } from "react-router-dom";
@@ -8,10 +8,38 @@ const LatestCollection = () => {
   const [latestProducts, setLatestProducts] = useState([]);
   const [activePopup, setActivePopup] = useState(null);
   const [selectedSize, setSelectedSize] = useState({});
+  const [visibleItems, setVisibleItems] = useState({});
+
+  const itemRefs = useRef([]);
 
   useEffect(() => {
     setLatestProducts(products.slice(0, 10));
   }, [products]);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const newVisible = { ...visibleItems };
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            newVisible[entry.target.dataset.index] = true;
+          }
+        });
+        setVisibleItems(newVisible);
+      },
+      { threshold: 0.2 }
+    );
+
+    itemRefs.current.forEach((ref) => {
+      if (ref) observer.observe(ref);
+    });
+
+    return () => {
+      itemRefs.current.forEach((ref) => {
+        if (ref) observer.unobserve(ref);
+      });
+    };
+  }, [latestProducts]);
 
   const handleAddToCart = (productId) => {
     setActivePopup(productId);
@@ -37,10 +65,19 @@ const LatestCollection = () => {
       </div>
 
       <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-        {latestProducts.map((item) => (
+        {latestProducts.map((item, index) => (
           <div
             key={item._id}
-            className="relative border rounded overflow-hidden bg-white shadow hover:shadow-lg transition-all duration-300 group flex flex-col"
+            ref={(el) => (itemRefs.current[index] = el)}
+            data-index={index}
+            className={`relative border rounded overflow-hidden bg-white shadow transition-all duration-500 group flex flex-col transform ${
+              visibleItems[index]
+                ? "opacity-100 translate-y-0"
+                : "opacity-0 translate-y-10"
+            }`}
+            style={{
+              transitionDelay: `${index * 100}ms`,
+            }}
           >
             {/* Product Image with Hover Swap */}
             <Link to={`/product/${item._id}`} className="block">
@@ -48,13 +85,13 @@ const LatestCollection = () => {
                 <img
                   src={item.image[0]}
                   alt={item.name}
-                  className="w-full h-full object-cover transition-opacity duration-300"
+                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                 />
                 {item.image.length > 1 && (
                   <img
                     src={item.image[1]}
                     alt={`${item.name} hover`}
-                    className="w-full h-full object-cover absolute top-0 left-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                    className="w-full h-full object-cover absolute top-0 left-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
                   />
                 )}
               </div>
@@ -85,7 +122,7 @@ const LatestCollection = () => {
             {/* Size Selector Popup */}
             {activePopup === item._id && (
               <div className="absolute top-0 left-0 w-full h-full bg-black bg-opacity-60 flex items-center justify-center z-20 p-4">
-                <div className="bg-white rounded-lg shadow-lg p-4 w-full max-w-[90%] sm:max-w-xs">
+                <div className="bg-white rounded-lg shadow-lg p-4 w-full max-w-[90%] sm:max-w-xs transform scale-95 animate-zoom-in">
                   <h3 className="text-sm font-semibold text-gray-800 mb-2">
                     Select Size
                   </h3>

@@ -4,8 +4,8 @@ import productModel from "../models/productModel.js";
 import razorpay from 'razorpay'
 
 // global variables
-const currency = 'inr'
-const deliveryCharge = 10
+const currency = '₹'
+const deliveryCharge = 30
 
 const razorpayInstance = new razorpay({
     key_id : process.env.RAZORPAY_KEY_ID,

@@ -1,3 +1,8 @@
+if ("scrollRestoration" in window.history) {
+  window.history.scrollRestoration = "manual";
+  window.scrollTo({ top: 0, behavior: "smooth" })
+}
+
 import React from 'react'
 import { Routes, Route } from 'react-router-dom'
 import Home from './pages/Home'

@@ -1,7 +1,8 @@
 import React, { useContext, useState, useRef, useEffect } from "react";
 import { assets } from "../assets/assets";
-import { Link, NavLink, useNavigate } from "react-router-dom";
+import { Link, NavLink, useNavigate, useLocation } from "react-router-dom";
 import { ShopContext } from "../context/ShopContext";
+import { motion } from "framer-motion";
 
 const Navbar = () => {
   const [visible, setVisible] = useState(false);
@@ -9,6 +10,10 @@ const Navbar = () => {
   const [profileVisible, setProfileVisible] = useState(false);
   const dropdownRef = useRef(null);
   const profileRef = useRef(null);
+  const navRef = useRef(null);
+  const location = useLocation();
+
+  // REMOVED: underlineProps & related animation logic
 
   const { setShowSearch, getCartCount, token, setToken, setCartItems } =
     useContext(ShopContext);
@@ -63,28 +68,62 @@ const Navbar = () => {
           <img src={assets.logo} alt="Logo" className="w-32 sm:w-40" />
         </Link>
 
-        <nav className="hidden sm:flex gap-6 text-sm font-medium text-gray-700 items-center">
+        <nav
+          ref={navRef}
+          className="relative hidden sm:flex gap-6 text-sm font-medium text-gray-700 items-center"
+        >
           {navItems.map((item) => (
             <NavLink
               key={item.name}
               to={item.to}
               className={({ isActive }) =>
-                `relative hover:text-black transition ${
-                  isActive ? "text-black font-semibold" : ""
+                `relative transition nav-item ${
+                  isActive ? "nav-active text-black font-semibold" : "hover:text-black"
                 }`
               }
             >
-              {item.name}
+              {({ isActive }) => (
+                <>
+                  {item.name}
+                  {/* Animated underline using layoutId */}
+                  {isActive && (
+                    <motion.div
+                      layoutId="navbar-underline"
+                      className="absolute left-0 right-0 -bottom-1 h-[2.5px] rounded bg-black"
+                      transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                    />
+                  )}
+                </>
+              )}
             </NavLink>
           ))}
 
           <div className="relative" ref={dropdownRef}>
-            <span
-              onClick={() => setDropdownVisible(!dropdownVisible)}
-              className="hover:text-black transition cursor-pointer"
+            <NavLink
+              to="/collection"
+              className={({ isActive }) =>
+                `relative transition nav-item ${
+                  isActive ? "nav-active text-black font-semibold" : "hover:text-black"
+                }`
+              }
+              onClick={e => {
+                e.preventDefault();
+                setDropdownVisible(!dropdownVisible);
+              }}
             >
-              COLLECTION
-            </span>
+              {({ isActive }) => (
+                <>
+                  <span>COLLECTION</span>
+                  {isActive && (
+                    <motion.div
+                      layoutId="navbar-underline"
+                      className="absolute left-0 right-0 -bottom-1 h-[2.5px] rounded bg-black"
+                      transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                    />
+                  )}
+                </>
+              )}
+            </NavLink>
             {dropdownVisible && (
               <div className="absolute top-full mt-2 bg-white shadow rounded w-40 text-sm text-gray-700 z-50">
                 <div

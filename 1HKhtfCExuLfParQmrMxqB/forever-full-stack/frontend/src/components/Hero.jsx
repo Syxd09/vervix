@@ -1,5 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { assets } from "../assets/assets";
+import { Link } from "react-router-dom";
+import Title from "../components/Title"; // ✅ Make sure this path is correct
 
 const images = [
   assets.hero_img,
@@ -12,93 +14,80 @@ const images = [
 
 const HeroCarousel = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const intervalRef = useRef(null);
+  const hoverRef = useRef(false);
+
+  const startAutoSlide = () => {
+    intervalRef.current = setInterval(() => {
+      if (!hoverRef.current) {
+        setCurrentIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1));
+      }
+    }, 5000);
+  };
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentIndex((prevIndex) =>
-        prevIndex === images.length - 1 ? 0 : prevIndex + 1
-      );
-    }, 5000); // Auto-change every 5 seconds
-
-    return () => clearInterval(interval);
+    startAutoSlide();
+    return () => clearInterval(intervalRef.current);
   }, []);
-
-  const prevSlide = () => {
-    setCurrentIndex(currentIndex === 0 ? images.length - 1 : currentIndex - 1);
-  };
-
-  const nextSlide = () => {
-    setCurrentIndex(currentIndex === images.length - 1 ? 0 : currentIndex + 1);
-  };
 
   const goToSlide = (index) => {
     setCurrentIndex(index);
   };
 
   return (
-    <div className="relative w-full mt-[6rem] z-0 overflow-hidden">
-      <div className="relative group">
-        {/* Image Container */}
-        <div className="w-full h-[50vh] sm:h-[65vh] md:h-[75vh] lg:h-[85vh] xl:h-[90vh] max-h-[70vh] overflow-hidden">
-          <img
-            src={images[currentIndex]}
-            alt={`Slide ${currentIndex + 1}`}
-            className="w-full h-full object-cover transition-all duration-700 ease-in-out group-hover:scale-105"
-          />
-        </div>
-
-        {/* Dots */}
-        <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 flex gap-2 z-30">
-          {images.map((_, i) => (
-            <button
-              key={i}
-              onClick={() => goToSlide(i)}
-              className={`w-3 h-3 rounded-full transition-all ${
-                i === currentIndex
-                  ? "bg-white scale-125 shadow-lg"
-                  : "bg-white/50 hover:bg-white/70"
-              }`}
-            />
-          ))}
-        </div>
-
-        {/* Optional: Uncomment below to use arrows */}
-        {/*
-        <button
-          onClick={prevSlide}
-          className="absolute top-1/2 left-5 transform -translate-y-1/2 z-20 bg-white/60 backdrop-blur-lg hover:bg-white rounded-full p-2 shadow-md transition hover:scale-105"
-        >
-          <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
-        </button>
-        <button
-          onClick={nextSlide}
-          className="absolute top-1/2 right-5 transform -translate-y-1/2 z-20 bg-white/60 backdrop-blur-lg hover:bg-white rounded-full p-2 shadow-md transition hover:scale-105"
-        >
-          <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-          </svg>
-        </button>
-        */}
-
-        {/* Optional: Slide Counter */}
-        {/*
-        <div className="absolute top-5 right-6 bg-black/50 text-white px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium z-30">
-          {currentIndex + 1} / {images.length}
-        </div>
-        */}
-
-        {/* Optional: CTA Button */}
-        {/*
-        <div className="absolute bottom-20 left-1/2 transform -translate-x-1/2 z-30">
-          <button className="bg-white/80 hover:bg-white text-gray-800 font-semibold px-6 py-3 sm:px-8 sm:py-4 rounded-full shadow-lg transition transform hover:scale-105">
-            SHOP NOW
-          </button>
-        </div>
-        */}
+    <>
+      {/* Section Heading */}
+      <div className="text-center pt-12 pb-4 bg-white mt-14">
+        <Title text1="Shop" text2="The Collection" />
       </div>
-    </div>
+
+      {/* Hero Carousel */}
+      <div
+        className="relative w-full z-0 overflow-hidden group"
+        onMouseEnter={() => (hoverRef.current = true)}
+        onMouseLeave={() => (hoverRef.current = false)}
+      >
+        <div className="w-full h-[40vh] sm:h-[50vh] md:h-[60vh] lg:h-[65vh] xl:h-[70vh] relative overflow-hidden">
+          <div
+            className="flex transition-transform duration-1000 ease-in-out"
+            style={{
+              transform: `translateX(-${currentIndex * 100}%)`,
+              width: `${images.length * 100}%`,
+            }}
+          >
+            {images.map((img, i) => (
+              <Link
+                to="/collection"
+                key={i}
+                className="w-full flex-shrink-0 h-[40vh] sm:h-[50vh] md:h-[60vh] lg:h-[65vh] xl:h-[70vh] relative"
+              >
+                <img
+                  src={img}
+                  alt={`Slide ${i + 1}`}
+                  className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent z-10 pointer-events-none" />
+              </Link>
+            ))}
+          </div>
+
+          {/* Dots */}
+          <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-2 z-30">
+            {images.map((_, i) => (
+              <button
+                key={i}
+                onClick={() => goToSlide(i)}
+                className={`w-3 h-3 rounded-full transition-all ${
+                  i === currentIndex
+                    ? "bg-white scale-125 shadow-md"
+                    : "bg-white/50 hover:bg-white/80"
+                }`}
+              />
+            ))}
+          </div>
+        </div>
+      </div>
+    </>
   );
 };
 

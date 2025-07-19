@@ -1,15 +1,14 @@
 import React, { useContext, useEffect, useState } from "react";
 import { ShopContext } from "../context/ShopContext";
 import Title from "../components/Title";
-import { assets } from "../assets/assets";
+import { assets } from "../assets/assets"; // keep if you use it somewhere
 import CartTotal from "../components/CartTotal";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 
 const Cart = () => {
-  const { products, currency, cartItems, updateQuantity, addToCart } =
-    useContext(ShopContext);
+  const { products, currency, cartItems, updateQuantity, addToCart } = useContext(ShopContext);
   const [cartData, setCartData] = useState([]);
   const [showSizeSelector, setShowSizeSelector] = useState(null);
   const navigate = useNavigate();
@@ -60,13 +59,8 @@ const Cart = () => {
 
   const handleSizeChange = (productId, oldSize, newSize, quantity) => {
     if (oldSize === newSize) return;
-    
-    // Remove item with old size
     updateQuantity(productId, oldSize, 0);
-    
-    // Add item with new size
-    addToCart(productId, newSize, quantity);
-    
+    addToCart(productId, newSize, quantity); // quantity is the current qty, so transfer properly
     setShowSizeSelector(null);
     toast.success("Size updated successfully", {
       style: {
@@ -91,7 +85,6 @@ const Cart = () => {
             Review your selected items and proceed to checkout
           </p>
         </motion.div>
-
         {cartData.length > 0 ? (
           <>
             {/* Cart Items */}
@@ -133,7 +126,6 @@ const Cart = () => {
                                 <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-emerald-100 text-emerald-800">
                                   {currency}{productData.price}
                                 </span>
-                                
                                 {/* Size Selector */}
                                 <div className="relative">
                                   <button
@@ -148,8 +140,6 @@ const Cart = () => {
                                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                                     </svg>
                                   </button>
-                                  
-                                  {/* Scrollable Size Dropdown */}
                                   {showSizeSelector === `${item._id}-${item.size}` && (
                                     <motion.div
                                       initial={{ opacity: 0, y: -10 }}
@@ -185,7 +175,6 @@ const Cart = () => {
                                             ))}
                                           </div>
                                         </div>
-                                        {/* Size count indicator */}
                                         {productData.sizes.length > 6 && (
                                           <div className="mt-2 pt-2 border-t border-slate-100">
                                             <p className="text-xs text-slate-400 text-center">
@@ -200,36 +189,37 @@ const Cart = () => {
                               </div>
                             </div>
                           </div>
-
                           {/* Quantity & Actions */}
                           <div className="flex sm:flex-col items-center sm:items-end gap-4 justify-between sm:justify-center">
-                            {/* Quantity Controls */}
+                            {/* Quantity Controls (with aria and disabling at min=1) */}
                             <div className="flex items-center bg-slate-100 rounded-xl p-1">
                               <button
-                                onClick={() =>
-                                  handleQuantityChange(item._id, item.size, -1)
-                                }
-                                className="w-8 h-8 flex items-center justify-center rounded-lg bg-white text-slate-600 hover:text-red-500 hover:bg-red-50 transition-all duration-200 shadow-sm"
+                                onClick={() => handleQuantityChange(item._id, item.size, -1)}
+                                disabled={item.quantity <= 1}
+                                aria-label="Decrease quantity"
+                                className="w-8 h-8 flex items-center justify-center rounded-lg bg-white text-slate-600 hover:text-red-500 hover:bg-red-50 
+                                  disabled:opacity-50 transition-all duration-200 shadow-sm"
+                                type="button"
                               >
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
                                 </svg>
                               </button>
-                              <span className="px-4 py-1 text-sm font-semibold text-slate-900 min-w-[3rem] text-center">
+                              <span className="flex items-center justify-center px-6 py-1 text-base font-bold text-slate-900 min-w-[2rem] text-center select-none">
                                 {item.quantity}
                               </span>
                               <button
-                                onClick={() =>
-                                  handleQuantityChange(item._id, item.size, 1)
-                                }
-                                className="w-8 h-8 flex items-center justify-center rounded-lg bg-white text-slate-600 hover:text-emerald-500 hover:bg-emerald-50 transition-all duration-200 shadow-sm"
+                                onClick={() => handleQuantityChange(item._id, item.size, 1)}
+                                aria-label="Increase quantity"
+                                className="w-8 h-8 flex items-center justify-center rounded-lg bg-white text-slate-600 hover:text-emerald-500 hover:bg-emerald-50 
+                                  transition-all duration-200 shadow-sm"
+                                type="button"
                               >
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                                 </svg>
                               </button>
                             </div>
-
                             {/* Remove Button */}
                             <button
                               onClick={() => handleRemoveItem(item._id, item.size)}
@@ -242,7 +232,6 @@ const Cart = () => {
                             </button>
                           </div>
                         </div>
-
                         {/* Subtotal */}
                         <div className="mt-4 pt-4 border-t border-slate-100">
                           <div className="flex justify-between items-center">
@@ -253,7 +242,6 @@ const Cart = () => {
                           </div>
                         </div>
                       </div>
-
                       {/* Overlay to close size selector */}
                       {showSizeSelector === `${item._id}-${item.size}` && (
                         <div
@@ -266,7 +254,6 @@ const Cart = () => {
                 })}
               </AnimatePresence>
             </div>
-
             {/* Checkout Section */}
             <motion.div
               initial={{ opacity: 0, y: 30 }}
@@ -290,7 +277,6 @@ const Cart = () => {
                     Discover more amazing products in our collection
                   </p>
                 </div>
-
                 {/* Cart Total & Checkout */}
                 <div className="w-full lg:w-96">
                   <div className="bg-gradient-to-br from-slate-50 to-blue-50 rounded-xl p-6 border border-slate-200/60">
@@ -312,7 +298,7 @@ const Cart = () => {
             </motion.div>
           </>
         ) : (
-          /* Empty Cart State */
+          /* Empty cart state, unchanged */
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
